@@ -1,0 +1,133 @@
+{
+  "name": "@mcactive/wt-ancillary-explorer",
+  "version": "0.1.1",
+  "description": "Web app to show ancillary inventory from WT api.",
+  "scripts": {
+    "lint": "eslint src test --ext jsx,js",
+    "test-watch": "jest --watch",
+    "test": "rimraf coverage && WT_SIGN_BOOKING_REQUESTS=true ETH_NETWORK_PROVIDER='http://localhost:8545' jest --coverage",
+    "coverage": "cat coverage/lcov.info | coveralls",
+    "start": "NODE_ENV=development GIT_REV=`git rev-parse --short HEAD` ./node_modules/.bin/webpack-dev-server --host 0.0.0.0 --disable-host-check",
+    "update-country-list": "node ./management/get-country-codes.js",
+    "build": "NODE_ENV=production ./node_modules/.bin/webpack --mode=production",
+    "build-env-file": "node ./management/build-env-file.js",
+    "superstatic": "./node_modules/.bin/superstatic --debug 1 --port 8080 --host 0.0.0.0 --compression 1 public/",
+    "docker-start": "npm run build-env-file && npm run superstatic",
+    "deploy-aws-playground": "./management/deploy-aws.sh playground",
+    "deploy-aws-lisbon": "./management/deploy-aws.sh lisbon",
+    "build-for-swarm-playground": "NODE_ENV=production GIT_REV=$TRAVIS_COMMIT HASH_ROUTED_BUILD=1 ./node_modules/.bin/webpack --mode=production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcactive/wt-ancillary-explorer"
+  },
+  "bin": {
+    "wt-ancillary-explorer": "./management/start-app.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@babel/polyfill": "^7.0.0",
+    "@babel/runtime": "^7.4.5",
+    "@fragaria/address-formatter": "^2.0.4",
+    "@windingtree/wt-js-libs": "^0.13.2",
+    "@windingtree/wt-pricing-algorithms": "^0.6.2",
+    "@windingtree/wt-ui": "^1.2.1",
+    "animate.css": "^3.7.0",
+    "bootstrap": "^4.1.3",
+    "classnames": "^2.2.6",
+    "connected-react-router": "^6.0.0",
+    "dayjs": "^1.7.7",
+    "formik": "^1.3.1",
+    "history": "^4.7.2",
+    "jquery": "^3.3.1",
+    "leaflet": "^1.3.3",
+    "lodash.get": "^4.4.2",
+    "lodash.set": "^4.3.2",
+    "popper.js": "^1.14.5",
+    "postcss-preset-env": "^6.6.0",
+    "prop-types": "^15.6.2",
+    "react": "^16.6.3",
+    "react-animate-on-scroll": "^2.1.5",
+    "react-bootstrap-typeahead": "^3.2.4",
+    "react-dom": "^16.6.3",
+    "react-geolocated": "^2.4.0",
+    "react-hot-loader": "^4.8.0",
+    "react-leaflet": "^2.1.2",
+    "react-loadable": "^5.4.0",
+    "react-markdown": "^4.0.3",
+    "react-masonry-css": "^1.0.11",
+    "react-redux": "^7.0.3",
+    "react-router": "^5.0.0",
+    "react-router-dom": "^5.0.0",
+    "redux": "^4.0.1",
+    "redux-thunk": "^2.3.0",
+    "redux-thunk-actions": "^1.2.1",
+    "reselect": "^4.0.0",
+    "web3-utils": "1.0.0-beta.37"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.5.0",
+    "@babel/plugin-proposal-class-properties": "^7.1.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
+    "@babel/plugin-syntax-dynamic-import": "^7.0.0",
+    "@babel/plugin-transform-runtime": "^7.4.4",
+    "@babel/preset-env": "^7.5.0",
+    "@babel/preset-react": "^7.0.0",
+    "babel-core": "^7.0.0-bridge.0",
+    "babel-eslint": "^10.0.1",
+    "babel-jest": "^24.1.0",
+    "babel-loader": "^8.0.6",
+    "clean-webpack-plugin": "^3.0.0",
+    "copy-webpack-plugin": "^5.0.0",
+    "coveralls": "^3.0.2",
+    "css-loader": "^2.1.1",
+    "cssnano": "^4.1.7",
+    "eslint": "^6.0.1",
+    "eslint-config-airbnb": "^17.0.0",
+    "eslint-plugin-import": "^2.18.0",
+    "eslint-plugin-jest": "^22.7.1",
+    "eslint-plugin-jsx-a11y": "^6.1.2",
+    "eslint-plugin-react": "^7.14.2",
+    "extract-text-webpack-plugin": "^4.0.0-beta.0",
+    "file-loader": "^4.0.0",
+    "html-webpack-plugin": "^3.2.0",
+    "jest": "^24.1.0",
+    "mini-css-extract-plugin": "^0.7.0",
+    "node-sass": "^4.10.0",
+    "optimize-css-assets-webpack-plugin": "^5.0.0",
+    "postcss": "^7.0.5",
+    "postcss-loader": "^3.0.0",
+    "precss": "^4.0.0",
+    "react-test-renderer": "^16.6.3",
+    "rimraf": "^2.6.2",
+    "sass-loader": "^7.0.3",
+    "style-loader": "^0.23.1",
+    "superstatic": "^6.0.3",
+    "terser-webpack-plugin": "^1.3.0",
+    "webpack": "^4.25.1",
+    "webpack-bundle-analyzer": "^3.0.3",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.2.0"
+  },
+  "jest": {
+    "testRegex": "./test/.*.spec.jsx",
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "coverageReporters": [
+      "text",
+      "lcov"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.jsx"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@windingtree/wt-ancillary-schemas",
+  "version": "0.8.2",
+  "description": "Ancillary schemas for WT platform",
+  "main": "dist/swagger.yaml",
+  "scripts": {
+    "build": "npm run clean && ./build.js",
+    "clean": "rimraf dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/windingtree/wt-ancillary-schemas.git"
+  },
+  "author": "Ondrej Chmelar <ondrej.chmelar@fragaria.cz>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/windingtree/wt-ancillary-schemas/issues"
+  },
+  "homepage": "https://github.com/windingtree/wt-ancillary-schemas#readme",
+  "devDependencies": {
+    "@windingtree/wt-shared-schemas": "^0.7.1",
+    "rimraf": "^2.6.3",
+    "yamljs": "^0.3.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

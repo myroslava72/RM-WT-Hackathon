@@ -1,0 +1,249 @@
+/* OVERRIDES */
+
+[type=reset], [type=submit], button, html [type=button] {
+  -webkit-appearance: none;
+}
+
+.alert {border-width: 2px!important;}
+.alert-light {
+  color: #7e7e7e;
+  font-weight: 400;
+  background-color: #ffffff;
+
+}
+.badge {
+  padding: 6px 10px;
+  margin-bottom: 2px;
+  letter-spacing: 0.03em;
+  margin-right: 0.2em;
+}
+.mdi { vertical-align: middle; }
+
+a.border-bottom {padding-bottom: 3px;}
+
+
+/* GRID */
+
+/* Masonry grid */
+.masonry-grid {
+  display: flex;
+  margin-left: -30px; /* gutter size offset */
+  width: auto;
+}
+.masonry-grid__col {
+  padding-left: 30px; /* gutter size */
+  background-clip: padding-box;
+}
+
+
+/* CONTAINERS */
+
+/* Hero */
+#app-hero {
+  h2 {margin-bottom: 10px;}
+}
+
+/* Crop for card and carousel images */
+.img-crop {
+  overflow: hidden;
+
+  padding-bottom: 65%;
+  height: 0;
+
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: 50%;
+
+  img {visibility: hidden;}
+}
+
+.hotel-description {
+  font-size: 19px;
+}
+
+/* Map Container */
+
+.map-container {
+  margin: 0 auto;
+  overflow: hidden;
+
+  border-radius: 5px;
+
+  &, > div {
+    height: 300px;
+  }
+
+  @media all and (min-width: 400px) {
+    &, > div {
+      width: 100%;
+    }
+  }
+}
+
+.map-popup {
+  text-align: center;
+  p {
+    margin: 3px 0!important;
+    font-size: 14px;
+  }
+}
+
+.leaflet-popup-content {
+  margin: 15px 8px;
+}
+
+
+/* Search on map */
+
+.map-container-lg {
+  margin: 0 auto;
+  overflow: hidden;
+
+  border-radius: 5px;
+
+  &, > div {
+    height: 600px;
+  }
+
+  @media all and (min-width: 400px) {
+    &, > div {
+      width: 100%;
+    }
+  }
+}
+
+.rbt-menu.dropdown-menu.show {
+  z-index: 1001;
+  margin-top: 0;
+}
+
+.rbt-input-hint {
+  width: 100%;
+}
+
+
+.card-with-links {
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .card-with-links {
+    position: relative;
+    transition: all .2s ease-in-out;
+
+  }
+  .card-with-links:hover, .card-with-links:focus {
+    position: relative;
+    transform: translateY(-1.5em);
+  }
+}
+
+
+/* Sticky footer styles */
+@media all and (min-width: 768px) {
+  html {
+    position: relative;
+    min-height: 100%;
+  }
+  body {
+    margin-bottom: 315px; /* Margin bottom by footer height */
+  }
+  .footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 315px; /* Set the fixed height of the footer here */
+    
+    hr {
+      margin: 0;
+    }
+  }
+}
+
+.input-group-text--btn:not(:hover) {
+  .mdi {opacity: .7;}
+}
+
+/* ADDITIONS */
+
+.divider {
+  border: none;
+  display: block;
+  height: 10px;
+  background: #F2F2F2;
+  border-radius: 5px;
+}
+
+.area-btn {
+  overflow:hidden;
+  position: relative;
+  border: none;
+  padding: 0;
+
+  &:hover  {
+    cursor: pointer;
+    &::before {
+      background-color: rgba(95, 41, 135, .9);
+    }
+    .area-btn__btn {
+      display: flex;
+      align-items: center;
+      background: none;
+      width: 100%;
+      height: 100%;
+      bottom: 0;
+
+      i {width: 40px; margin: 0 auto;}
+    }
+
+  }
+}
+.area-btn__btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  color: #fff;
+  line-height: 40px;
+  background: #5F2987;
+}
+
+.area-btn::before {
+  content: '';
+  display:block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+
+  transition: all 0.1s ease-in-out;
+}
+
+.room-price {
+  min-height: 75px;
+}
+
+/* HELPERS */
+.text--accent {color: #5F2987 !important;}
+.text--link {
+  color: #164FDD !important;
+  &:hover {
+    color: #0F3697 !important;
+  }
+}
+.text--weight-normal {
+  &, & b, & strong {
+    font-weight: normal !important;
+  }
+}
+.text--deleted {
+  opacity: .8 !important;
+  text-decoration: line-through !important;
+}
+
+.box-shadow {
+  box-shadow: 1px 5px 5px rgba(0,0,0,.2) !important;
+}
+
+.required label {
+  color: #000000;
+}

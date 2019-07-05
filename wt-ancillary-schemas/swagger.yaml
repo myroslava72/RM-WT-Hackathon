@@ -1,0 +1,60 @@
+openapi: 3.0.0
+servers: []
+info:
+  version: "will-be-set-during-build"
+  title: Ancillary Provider data definitions
+  description: Object definitions for the Ancillary part of the WT platform.
+paths: {}
+components:
+  schemas:
+   AncillaryProviderIndex:
+      title: AncillaryProviderDescription data index
+      description: Landing index for AncillaryProviderDescription resources. Link to this document is stored in WT-Index smart contract AuxillaryProviderDescription record
+      type: object
+      required:
+      - dataFormatVersion
+      - descriptionUri
+      properties:
+        dataFormatVersion:
+          description: Version number indicating the data format specification version.
+          type: string
+          format: semver
+          maxLength: 20
+        descriptionUri:
+          description: URI pointing to the AncillaryProviderDescription data resource
+          $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+
+    AncillaryProviderDescription:
+      title: Ancillary provider description
+      allOf:
+        - $ref: '#/components/schemas/AncillaryProviderDescriptionBase'
+        - type: object
+          required:
+          - name
+          - image
+          - description   
+          - website 
+          AncillaryDescriptionMinimalBase:
+            title: Ancillary provider description.
+            description: Basic properties of an Ancillary Provider.
+             type: object
+              properties:
+                name:
+                  description: Name of the Ancillary Provider to display to users
+                  $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/NameType'
+                image:
+                  description: URL of a Ancillary provider Image
+                  $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+                description:
+                  description: Name of the Ancillary provider to display to users
+                  $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/NameType'
+                website:
+                  description: URL of a Ancillary provider website
+                  $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+                auxillaries:
+                    description: A list of policies under which it is possible to cancel a reservation.
+                    type: array
+                    items:
+                    $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/Ancillary'
+
+

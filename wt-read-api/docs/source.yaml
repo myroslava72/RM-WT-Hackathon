@@ -1,0 +1,1188 @@
+openapi: 3.0.0
+servers:
+  - description: Demo deployment
+    url: 'https://demo-api.windingtree.com'
+  - description: Localhost
+    url: 'http://localhost:3000'
+info:
+  description: API for reading inventory from Winding Tree platform
+  version: 'will-be-set-at-runtime'
+  title: WT Read API
+paths:
+  /:
+    get:
+      summary: API info
+      responses:
+        '200':
+          description: Basic information about this API instance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  docs:
+                    type: string
+                    description: Link to the API documentation.
+                  info:
+                    type: string
+                    description: Link to more information about the API.
+                  version:
+                    type: string
+                    description: Deployed API version number.
+                  config:
+                    type: string
+                    description: Which config is the API using. It might be useful to name configs after used ETH networks.
+                  directoryAddresses:
+                    type: object
+                    properties:
+                      airlines:
+                        type: string
+                        description: Ethereum address of used Winding Tree airline directory.
+                      hotels:
+                        type: string
+                        description: Ethereum address of used Winding Tree hotel directory.
+                  ethNetwork:
+                    type: string
+                    description: Name of the ethereum network against which this instance runs.
+                  dataFormatVersions:
+                    description: Version number indicating the data format specification version the server expects from hotels.
+                    type: object
+                    properties:
+                      airlines:
+                        type: string
+                        format: semver
+                        maxLength: 20
+                      hotels:
+                        type: string
+                        format: semver
+                        maxLength: 20
+                  trustClues:
+                    description: Lists all used trust clues and their metadata. Every clue contains name and description field, but it might contiain other fields depending on the clue.
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        description:
+                          type: string
+
+  /hotels:
+    get:
+      summary: Lists hotels
+      parameters:
+        - name: limit
+          in: query
+          description: maximum number of records to return
+          required: false
+          schema:
+            default: 30
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 300
+        - name: startWith
+          in: query
+          description: The `id` of the first record that will be included in the result
+          required: false
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: fields
+          in: query
+          description: >
+            List of fields to return with the hotel item. Selecting only `id`
+            field leads to fastest responses as all data are retrieved from
+            directory only.
+          required: false
+          schema:
+            default:
+              - id
+              - name
+              - location
+            type: array
+            items:
+              type: string
+              enum:
+                - address
+                - amenities
+                - availability
+                - bookingUri
+                - cancellationPolicies
+                - category
+                - contacts
+                - currency
+                - dataFormatVersion
+                - orgJsonUri
+                - defaultCancellationAmount
+                - defaultLocale
+                - description
+                - guarantee
+                - id
+                - images
+                - location
+                - managerAddress
+                - name
+                - notificationsUri
+                - operator
+                - ratePlans
+                - roomTypes
+                - spokenLanguages
+                - tags
+                - timezone
+                - updatedAt
+      responses:
+        '200':
+          description: >-
+            List of hotels. The API tries to always fulfil the requested limit,
+            so in some cases, the `errors` field might be present.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    description: List of resolved hotels.
+                    items:
+                      $ref: '#/components/schemas/HotelListItem'
+                  warnings:
+                    type: array
+                    description: List of resolved hotels passing validation with unsupported declared data format version.
+                    items:
+                      $ref: '#/components/schemas/HotelListError'
+                  errors:
+                    type: array
+                    description: >-
+                      List of checked hotels whose requested data cannot be
+                      accessed (i. e. off-chain data cannot be reached) or fail validation.
+                    items:
+                      $ref: '#/components/schemas/HotelListError'
+                  next:
+                    description: >-
+                      Uri to next page of records. When there's no next page,
+                      this is not set.
+                    $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+        '400':
+          $ref: '#/components/responses/InvalidRequestError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+  '/hotels/{hotelId}':
+    get:
+      summary: Get hotel by `id`
+      parameters:
+        - name: hotelId
+          required: true
+          in: path
+          description: Hotel Id as returned by `GET /hotel`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: fields
+          required: false
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              default:
+                - id
+                - location
+                - name
+                - description
+                - contacts
+                - address
+                - currency
+                - images
+                - amenities
+                - updatedAt
+              enum:
+                - address
+                - amenities
+                - availability
+                - bookingUri
+                - cancellationPolicies
+                - category
+                - contacts
+                - currency
+                - dataFormatVersion
+                - orgJsonUri
+                - defaultCancellationAmount
+                - defaultLocale
+                - description
+                - guarantee
+                - id
+                - images
+                - location
+                - managerAddress
+                - name
+                - notificationsUri
+                - operator
+                - ratePlans
+                - roomTypes
+                - spokenLanguages
+                - tags
+                - timezone
+                - updatedAt
+      responses:
+        '200':
+          description: Hotel object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotelDetail'
+          headers:
+            X-Data-Validation-Warning:
+              schema:
+                type: string
+              description: Warning in case of a soft validation fail.
+        '400':
+          $ref: '#/components/responses/InvalidRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+  '/hotels/{hotelId}/meta':
+    get:
+      summary: Hotel record meta information - mostly on-chain and off-chain identifiers of places where to reach all of the hotel's data.
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          description: Hotel Id as returned by `GET /hotel`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+      responses:
+        '200':
+          description: Hotel data uris.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetaResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+  '/hotels/{hotelId}/roomTypes':
+    get:
+      summary: List room types for hotel `id`
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          description: Hotel Id as returned by `GET /hotel`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: fields
+          in: query
+          required: false
+          description: Additional fields to return
+          schema:
+            type: string
+            enum:
+            - ratePlans
+            - availability
+      responses:
+        '200':
+          description: Room types list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomTypesResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+  '/hotels/{hotelId}/roomTypes/{roomTypeId}':
+    get:
+      summary: Get room type `id`
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          description: Hotel Id as returned by `GET /hotel`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: roomTypeId
+          in: path
+          required: true
+          description: Id of room type
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/ObjectIdType'
+        - name: fields
+          in: query
+          required: false
+          description: Additional fields to return
+          schema:
+            type: string
+            enum:
+            - ratePlans
+            - availability
+      responses:
+        '200':
+          description: Room type with id = `id`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomTypeResponse'
+          headers:
+            X-Data-Validation-Warning:
+              schema:
+                type: string
+              description: Warning in case of a soft validation fail.
+        '400':
+          $ref: '#/components/responses/InvalidRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+  '/hotels/{hotelId}/roomTypes/{roomTypeId}/ratePlans':
+    get:
+      summary: Get rate plans of the room type `id`
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          description: Hotel Id as returned by `GET /hotel`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: roomTypeId
+          in: path
+          required: true
+          description: Id of room type
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/ObjectIdType'
+      responses:
+        '200':
+          description: Rate plans for the room type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatePlansResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+  '/hotels/{hotelId}/roomTypes/{roomTypeId}/availability':
+    get:
+      summary: Get availability of the room type `id`. The availability field contains only a single key with room type id.
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          description: Hotel Id as returned by `GET /hotel`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: roomTypeId
+          in: path
+          required: true
+          description: Id of room type
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/ObjectIdType'
+      responses:
+        '200':
+          description: Availability for the room type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+  '/hotels/{hotelId}/availability':
+    get:
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          description: Hotel Id as returned by `GET /hotel`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+      responses:
+        '200':
+          description: Availability data for the hotel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+  '/hotels/{hotelId}/ratePlans':
+    get:
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          description: Hotel Id as returned by `GET /hotel`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+      responses:
+        '200':
+          description: Rate plans for the hotel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatePlansResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+  '/hotels/{hotelId}/ratePlans/{ratePlanId}':
+    get:
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          description: Hotel Id as returned by `GET /hotel`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: ratePlanId
+          in: path
+          required: true
+          description: Id of rate plan
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/ObjectIdType'
+      responses:
+        '200':
+          description: Rate plan details
+          content:
+            application/json:
+              schema:
+                $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/RatePlan'
+          headers:
+            X-Data-Validation-Warning:
+              schema:
+                type: string
+              description: Warning in case of a soft validation fail.
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+
+  /airlines:
+    get:
+      summary: Lists airlines
+      parameters:
+        - name: limit
+          in: query
+          description: maximum number of records to return
+          required: false
+          schema:
+            default: 30
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 300
+        - name: startWith
+          in: query
+          description: The `id` of the first record that will be included in the result
+          required: false
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: fields
+          in: query
+          description: >
+            List of fields to return with the airline item. Selecting only `id`
+            field leads to fastest responses as all data are retrieved from
+            directory only.
+          required: false
+          schema:
+            default:
+              - id
+              - name
+              - code
+            type: array
+            items:
+              type: string
+              enum:
+                - bookingUri
+                - cancellationPolicies
+                - code
+                - contacts
+                - currency
+                - dataFormatVersion
+                - orgJsonUri
+                - defaultCancellationAmount
+                - description
+                - flights
+                - flights.items.flightInstances
+                - id
+                - managerAddress
+                - name
+                - notificationsUri
+                - operator
+                - updatedAt
+      responses:
+        '200':
+          description: >-
+            List of airlines. The API tries to always fulfil the requested limit,
+            so in some cases, the `errors` field might be present.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    description: List of resolved airlines.
+                    items:
+                      $ref: '#/components/schemas/AirlineListItem'
+                  warnings:
+                    type: array
+                    description: List of resolved airlines passing validation with unsupported declared data format version.
+                    items:
+                      $ref: '#/components/schemas/AirlineListError'
+                  errors:
+                    type: array
+                    description: >-
+                      List of checked airlines whose requested data cannot be
+                      accessed (i. e. off-chain data cannot be reached) or fail validation.
+                    items:
+                      $ref: '#/components/schemas/AirlineListError'
+                  next:
+                    description: >-
+                      Uri to next page of records. When there's no next page,
+                      this is not set.
+                    $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+        '400':
+          $ref: '#/components/responses/InvalidRequestError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+
+  '/airlines/{airlineId}':
+    get:
+      summary: Get airline by `id`
+      parameters:
+        - name: airlineId
+          required: true
+          in: path
+          description: Airline id as returned by `GET /airline`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: fields
+          required: false
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              default:
+                - id
+                - name
+                - description
+                - contacts
+                - currency
+                - updatedAt
+              enum:
+                - bookingUri
+                - cancellationPolicies
+                - code
+                - contacts
+                - currency
+                - dataFormatVersion
+                - orgJsonUri
+                - defaultCancellationAmount
+                - description
+                - flights
+                - flights.items.flightInstances
+                - id
+                - managerAddress
+                - name
+                - notificationsUri
+                - operator
+                - updatedAt
+      responses:
+        '200':
+          description: Airline object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirlineDetail'
+          headers:
+            X-Data-Validation-Warning:
+              schema:
+                type: string
+              description: Warning in case of a soft validation fail.
+        '400':
+          $ref: '#/components/responses/InvalidRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+
+  '/airlines/{airlineId}/flights':
+    get:
+      summary: Get flights list by airline id
+      parameters:
+        - name: airlineId
+          in: path
+          required: true
+          description: Airline Id as returned by `GET /airline`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: fields
+          in: query
+          required: false
+          description: Additional fields to return (id, origin, destination and segments are always returned).
+          schema:
+            type: string
+            default: []
+            enum:
+              - flightInstances
+      responses:
+        '200':
+          description: Flight data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '@windingtree/wt-airline-schemas/swagger.yaml#/components/schemas/Flights'
+                  - type: object
+                    properties:
+                      warnings:
+                        type: array
+                        description: Array of Flights
+                        items:
+                          $ref: '#/components/schemas/AirlineListError'
+                      errors:
+                        type: array
+                        description: Array of Flights
+                        items:
+                          $ref: '#/components/schemas/AirlineListError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+
+  '/airlines/{airlineId}/flights/{flightId}':
+    get:
+      summary: Get flight by `id`
+      parameters:
+        - name: airlineId
+          in: path
+          required: true
+          description: Airline Id as returned by `GET /airline`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: flightId
+          in: path
+          required: true
+          description: Flight Id as returned by `GET /airline` or `GET /airline/:id/flights`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/ObjectIdType'
+        - name: fields
+          in: query
+          required: false
+          description: Additional fields to return (id, origin, destination and segments are always returned).
+          schema:
+            type: string
+            default: []
+            enum:
+              - flightInstances
+      responses:
+        '200':
+          description: Flight data
+          content:
+            application/json:
+              schema:
+                $ref: '@windingtree/wt-airline-schemas/swagger.yaml#/components/schemas/Flight'
+          headers:
+            X-Data-Validation-Warning:
+              schema:
+                type: string
+              description: Warning in case of a soft validation fail.
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+
+  '/airlines/{airlineId}/flights/{flightId}/meta':
+    get:
+      summary: Get flight meta data
+      parameters:
+        - name: airlineId
+          in: path
+          required: true
+          description: Airline Id as returned by `GET /airline`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: flightId
+          in: path
+          required: true
+          description: Flight Id as returned by `GET /airline` or `GET /airline/:id/flights`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/ObjectIdType'
+      responses:
+        '200':
+          description: Flight instances
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - flightInstancesUri
+                properties:
+                  flightInstancesUri:
+                    $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+
+  '/airlines/{airlineId}/flights/{flightId}/instances':
+    get:
+      summary: Get flight instances list by flight id
+      parameters:
+        - name: airlineId
+          in: path
+          required: true
+          description: Airline Id as returned by `GET /airline`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: flightId
+          in: path
+          required: true
+          description: Flight Id as returned by `GET /airline` or `GET /airline/:id/flights`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/ObjectIdType'
+      responses:
+        '200':
+          description: Flight instances
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    $ref: '@windingtree/wt-airline-schemas/swagger.yaml#/components/schemas/FlightInstances'
+                  warnings:
+                    type: array
+                    description: Array of Flights
+                    items:
+                      $ref: '#/components/schemas/AirlineListError'
+                  errors:
+                    type: array
+                    description: Array of Flights
+                    items:
+                      $ref: '#/components/schemas/AirlineListError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+
+  '/airlines/{airlineId}/flights/{flightId}/instances/{flightInstanceId}':
+    get:
+      summary: Get flight instance detail
+      parameters:
+        - name: airlineId
+          in: path
+          required: true
+          description: Airline Id as returned by `GET /airline`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        - name: flightId
+          in: path
+          required: true
+          description: Flight Id as returned by `GET /airline` or `GET /airline/:id/flights`
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/ObjectIdType'
+        - name: flightInstanceId
+          in: path
+          required: true
+          description: Id of flight instance
+          schema:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/ObjectIdType'
+      responses:
+        '200':
+          description: Flight instance details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '@windingtree/wt-airline-schemas/swagger.yaml#/components/schemas/FlightInstance'
+                  - type: object
+                    properties:
+                      dataFormatVersion:
+                        description: Version number indicating the data format specification version.
+                        type: string
+                        format: semver
+                        maxLength: 20
+          headers:
+            X-Data-Validation-Warning:
+              schema:
+                type: string
+              description: Warning in case of a soft validation fail.
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/HttpBadGatewayError'
+
+components:
+  responses:
+    InvalidRequestError:
+      description: The server does not understand to the request (HTTP code 400)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFoundError:
+      description: The object was not found (HTTP code 404)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntityError:
+      description: The object was not found (HTTP code 422)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal server error (HTTP code 500)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    HttpBadGatewayError:
+      description: Internal server error (HTTP code 502)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationError:
+      description: Upstream data validation error (HTTP code 422)
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Error'
+              - type: object
+                properties:
+                  data:
+                    description: 'Upstream data that failed validation against api spec or is invalid dataFormatVersion.'
+                    type: object
+  schemas:
+    HotelListError:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          description: Human readable error from the API
+          type: string
+        originalError:
+          description: Text of the original exception that caused this error
+          type: string
+        data:
+          type: object
+          description: >-
+            Additional data to this error, typically contains `id` that
+            identifies the erroring record.
+
+    HotelListItem:
+      allOf:
+        - $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/HotelDescriptionBase'
+        - $ref: '#/components/schemas/ReducedHotelDataIndex'
+        - type: object
+          required:
+          - id
+          properties:
+            id:
+              $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+            managerAddress:
+              $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+            ratePlans:
+              $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/RatePlans'
+            availability:
+              $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/Availability'
+            roomTypes:
+              $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/RoomTypes'
+    HotelDetail:
+      allOf:
+      - $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/HotelDescription'
+      - $ref: '#/components/schemas/ReducedHotelDataIndex'
+      - type: object
+        required:
+          - id
+        properties:
+          id:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+          managerAddress:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+          ratePlans:
+            $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/RatePlans'
+          availability:
+            $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/Availability'
+          roomTypes:
+            $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/RoomTypes'
+    ReducedHotelDataIndex:
+      title: Hotel data index fields that can be resolved in read api
+      type: object
+      properties:
+        orgJsonUri:
+          description: URI of the Hotel ORG.JSON (pointing off-chain)
+          $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+        dataFormatVersion:
+          description: Version number indicating the data format specification version.
+          type: string
+          format: semver
+          maxLength: 20
+        notificationsUri:
+          $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+          description: URI pointing to an instance of the WT Notification service.
+        bookingUri:
+          $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+          description: URI pointing to an instance of the WT Booking service.
+        defaultLocale:
+          $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/LanguageCodeType'
+          description: Code of language in which all textual information for this record is presented. If no default locale is declared, the texts are expected to be in English language.
+        guarantee:
+          description: Object used to prove that a hotel is legitimate.
+          type: object
+          properties:
+            claim:
+              description: Hex encoded JSON serialized claim
+              type: string
+            signature:
+              description: Signature of a serialized `claim` signed by a private key associated with the `claim.guarantor` ETH address with the [eth_sign](https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_sign) compatible method.
+              type: string
+
+    RoomTypesResponse:
+      description: Array of room types
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoomTypeResponse'
+        warnings:
+          type: array
+          description: Array of room types warnings
+          items:
+            $ref: '#/components/schemas/HotelListError'
+        errors:
+          type: array
+          description: Array of room types errors
+          items:
+            $ref: '#/components/schemas/HotelListError'
+
+    RoomTypeResponse:
+      allOf:
+      - $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/RoomType'
+      - type: object
+        properties:
+          availability:
+            $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/Availability'
+
+    RatePlansResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+              $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/RatePlan'
+        warnings:
+          type: array
+          description: Array of Flights
+          items:
+            $ref: '#/components/schemas/AirlineListError'
+        errors:
+          type: array
+          description: Array of Flights
+          items:
+            $ref: '#/components/schemas/AirlineListError'
+
+    AvailabilityResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/AvailabilityForDay'
+        warnings:
+          type: array
+          description: Array of Flights
+          items:
+            $ref: '#/components/schemas/AirlineListError'
+        errors:
+          type: array
+          description: Array of Flights
+          items:
+            $ref: '#/components/schemas/AirlineListError'
+        updatedAt:
+          type: string
+          description: Date-time when the data was last changed. Used by consumers to handle incremental updates and caching.
+          format: date-time
+
+    AirlineListItem:
+      allOf:
+        - $ref: '@windingtree/wt-airline-schemas/swagger.yaml#/components/schemas/AirlineDescriptionBase'
+        - type: object
+          required:
+          - id
+          properties:
+            id:
+              $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+            managerAddress:
+              $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+            flights:
+              description: Flights operated by the airline
+              $ref: '#/components/schemas/FlightsResponse'
+
+    AirlineListError:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          description: Human readable error from the API
+          type: string
+        originalError:
+          description: Text of the original exception that caused this error
+          type: string
+        data:
+          type: object
+          description: >-
+            Additional data to this error, typically contains `id` that
+            identifies the erroring record.
+
+    AirlineDetail:
+      allOf:
+      - $ref: '@windingtree/wt-airline-schemas/swagger.yaml#/components/schemas/AirlineDescription'
+      - type: object
+        required:
+          - id
+        properties:
+          id:
+            $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+          flights:
+            $ref: '@windingtree/wt-airline-schemas/swagger.yaml#/components/schemas/Flights'
+
+    FlightsResponse:
+      description: Array of flight instances
+      type: array
+      items:
+        $ref: '@windingtree/wt-airline-schemas/swagger.yaml#/components/schemas/Flight'
+
+    MetaResponse:
+      type: object
+      description: Collection of identifiers required to look up hotel data
+      required:
+        - address
+        - orgJsonUri
+      properties:
+        address:
+          description: Ethereum address of the hotel
+          $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/EthereumAddressType'
+        orgJsonUri:
+          description: URI of the Hotel ORG.JSON (pointing off-chain)
+          $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+        dataIndexUri:
+          description: URI of the Hotel API data index
+          $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+        descriptionUri:
+          description: URI of the Hotel description (pointing off-chain)
+          $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+        ratePlansUri:
+          description: URI of the Hotel rate plans (pointing off-chain)
+          $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+        availabilityUri:
+          description: URI of the Hotel availability (pointing off-chain)
+          $ref: '@windingtree/wt-shared-schemas/swagger.yaml#/components/schemas/UriType'
+        dataFormatVersion:
+          description: Version number indicating the data format specification version.
+          type: string
+          format: semver
+          maxLength: 20
+        guarantee:
+          $ref: '@windingtree/wt-hotel-schemas/swagger.yaml#/components/schemas/GuarantorMessage'
+
+    Error:
+      title: Error
+      description: Default schema for errors returned by API.
+      properties:
+        status:
+          type: number
+          description: HTTP status
+        code:
+          type: string
+          description: Computer-readable error. Use this for comparison.
+        short:
+          type: string
+          description: Human-readable error with a short description of the error.
+        long:
+          type: string
+          description: Verbose explanation of what happen.

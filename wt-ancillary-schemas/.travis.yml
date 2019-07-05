@@ -1,0 +1,29 @@
+dist: xenial
+sudo: false
+group: beta
+language: node_js
+cache:
+  directories:
+  - "$HOME/.npm"
+install: case $TRAVIS_BRANCH in greenkeeper*) npm i;; *) npm ci;; esac;
+jobs:
+  include:
+  - stage: build
+    if: tag IS blank
+    script: npm run build
+  - stage: NPM release
+    script: echo 'Deploying to NPM...'
+    if: tag IS present
+    before_deploy: npm run build
+    deploy:
+      provider: npm
+      email: devops@windingtree.com
+      skip_cleanup: true
+      api_key: "$NPM_TOKEN"
+      on:
+        repo: windingtree/wt-auxillary-schemas
+        branch: master
+        tags: true
+env:
+  global:
+    secure: Q+Hw2ENyucy6CuvQc446LE4dMKKZVJQvWf5FdJjRk7zIQKVD1h66I4E4l7O89ConIURsioUcT2Ibk6bFUceudr0WZEXAZc8rTUL81/WAQxQY9yR0I8I43usSGKl+eZVWFYf7cDIbO5M8QeLatxi2sVBgw8FsImclfgInKjZ7RSzaqUqlSJ/fk8KGjwGtxNWJTFx19RDrfzpMzyANEKtP1LmcVZRP1f1YIEA/cKEQUIkXWMsr3hBbzWvD+GrMGRbNmKhxSnTbanmwzYdTEdhtoOat5W1fTtKdyjVhqFTFOwQ9yAPXix65IyRpwuZHpuZNgvYQf7kwmBJh2GlpFcAvhDYjnQH/xsQzjlyz/N/Ly6Vz8dPwbCjiVz0FE8SBz+39tTXjzjwJzEokUYGXfxdi+NsEpSsGy5wRRv8lhiC5rM4rsvtxPqAqgsAq+gR/Ady8D7g88e10FdGX8rmOqSQldobJREnmvpa5QEGopWlAYrad2dGgUXdJ6zNxqCQs8ce5G6UIPUAuuzG6XNTa5Arh626IZV4qHV4RccyIfdyGo8p06itTzNRIOwnvloRTq0WTjW1abXIVjvozNNTwgZhU6XZE71MoffuJS/bKLYRTvMD5MnMljiViat3Bm0YD8aUUGyp49Z7whEDLs4ST6DI74vNarKMOhWFu/c6AcIxoIms=
