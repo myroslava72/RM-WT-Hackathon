@@ -62,7 +62,7 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
-    "@ensdomains/ens": "^0.3.5",
+    "@ensdomains/ens": "^0.4.0",
     "@ensdomains/resolver": "^0.1.6",
     "@windingtree/lif-token": "^0.1.2-erc827",
     "@windingtree/wt-contracts": "^0.7.0",
