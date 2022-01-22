@@ -53,7 +53,7 @@
     "lodash": "^4.17.10",
     "lodash.clonedeep": "^4.5.0",
     "morgan": "^1.9.1",
-    "node-fetch": "^2.3.0",
+    "node-fetch": "^3.1.1",
     "semver": "^6.0.0",
     "swagger-model-validator": "^3.0.10",
     "swagger-ui-express": "^4.0.0",
